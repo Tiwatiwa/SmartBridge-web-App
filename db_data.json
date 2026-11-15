@@ -1,0 +1,559 @@
+{
+  "users": [
+    {
+      "id": "trader_1",
+      "email": "muyembe@farm.com",
+      "name": "Muyembe Organic Farms",
+      "role": "trader",
+      "location": "Lusaka",
+      "businessName": "Muyembe Organic Farms",
+      "category": "Fresh Produce",
+      "description": "Premium organic vegetables and fruits harvested fresh daily from our family farm in Chisamba and Chongwe.",
+      "verifiedBusiness": true,
+      "isFarmer": true
+    },
+    {
+      "id": "trader_2",
+      "email": "bake@shop.com",
+      "name": "Kalingalinga Bakers",
+      "role": "trader",
+      "location": "Lusaka",
+      "businessName": "Kalingalinga Bakers",
+      "category": "Bakery",
+      "description": "Fresh golden country loaves, tea scones, and sweet buns baked in our local community brick oven.",
+      "verifiedBusiness": true,
+      "isFarmer": false
+    },
+    {
+      "id": "trader_3",
+      "email": "tech@repair.com",
+      "name": "Kabwata Solar & Electronics",
+      "role": "trader",
+      "location": "Kitwe",
+      "businessName": "Kabwata Solar & Repair Solutions",
+      "category": "Hardware",
+      "description": "Reliable smartphone repairs, solar charge controllers setup, and backup battery restorations.",
+      "verifiedBusiness": true,
+      "isFarmer": false
+    },
+    {
+      "id": "user_1781894542225",
+      "email": "tiwongenkhoma@gmail.com",
+      "name": "Tiwonge Nkhoma",
+      "role": "customer",
+      "location": "Lusaka"
+    },
+    {
+      "id": "trader_4",
+      "email": "chongwe@agri.zm",
+      "name": "Chongwe Farmers Co-op",
+      "role": "trader",
+      "location": "Chongwe",
+      "businessName": "Chongwe Farmers Co-op",
+      "category": "Agriculture",
+      "isFarmer": true,
+      "verifiedBusiness": true,
+      "description": "Cooperative wholesale & group-buy agricultural inputs, D-Compound fertilizer, and harvest reservations."
+    },
+    {
+      "id": "trader_5",
+      "email": "lusaka@techhub.zm",
+      "name": "Cairo Road Mobile & Gear",
+      "role": "trader",
+      "location": "Lusaka",
+      "businessName": "Cairo Road Mobile & Gear",
+      "category": "Electronics",
+      "isFarmer": false,
+      "verifiedBusiness": true,
+      "description": "Budget Android smartphones, camera equipment rentals, and certified pre-owned laptops."
+    },
+    {
+      "id": "trader_6",
+      "email": "kamwala@freshsave.zm",
+      "name": "Kamwala FreshSave Market",
+      "role": "trader",
+      "location": "Lusaka",
+      "businessName": "Kamwala FreshSave Market",
+      "category": "Groceries",
+      "isFarmer": false,
+      "verifiedBusiness": true,
+      "description": "Everyday Zambian pantry staples and food-safety certified near-expiry clearance deals."
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_1",
+      "userId": "trader_1",
+      "traderName": "Muyembe Organic Farms",
+      "businessName": "Muyembe Organic Farms",
+      "location": "Lusaka",
+      "name": "Chisamba Fresh Strawberries Basket",
+      "price": 120,
+      "description": "Sweet, juicy local strawberries grown near Chisamba. Handpicked daily. Basket weight approx 500g.",
+      "category": "Fresh Produce",
+      "imageUrl": "asset:produce",
+      "listingType": "farm_direct",
+      "compareKey": "strawberries-500g",
+      "stockQty": 28,
+      "pickupAvailable": true,
+      "distanceKm": 3.2,
+      "groupBuy": {
+        "enabled": true,
+        "targetBuyers": 4,
+        "discountedPrice": 95
+      },
+      "harvestDate": "Harvested Today",
+      "minBulkQty": 5,
+      "advanceReservation": true
+    },
+    {
+      "id": "prod_2",
+      "userId": "trader_1",
+      "traderName": "Muyembe Organic Farms",
+      "businessName": "Muyembe Organic Farms",
+      "location": "Lusaka",
+      "name": "Fresh Local Rape (Greens) Bunch",
+      "price": 30,
+      "description": "Crisp and mineral-rich local green rape leaves. The backbone of Zambian side dishes. Perfect sautéed with tomatoes and onions.",
+      "category": "Fresh Produce",
+      "imageUrl": "asset:produce",
+      "listingType": "farm_direct",
+      "compareKey": "greens-bundle",
+      "stockQty": 64,
+      "pickupAvailable": true,
+      "distanceKm": 3.2,
+      "harvestDate": "Harvested Today",
+      "minBulkQty": 10,
+      "advanceReservation": false
+    },
+    {
+      "id": "prod_3",
+      "userId": "trader_2",
+      "traderName": "Kalingalinga Bakers",
+      "businessName": "Kalingalinga Bakers",
+      "location": "Lusaka",
+      "name": "Super Loaf country Bread",
+      "price": 45,
+      "description": "Chongwe artisan sourdough country loaf. Rich golden blistered crust, baked in our hybrid eco-fire brick ovens.",
+      "category": "Bakery",
+      "imageUrl": "asset:bakery",
+      "listingType": "new",
+      "compareKey": "sourdough-loaf",
+      "stockQty": 18,
+      "pickupAvailable": true,
+      "distanceKm": 1.8,
+      "groupBuy": {
+        "enabled": true,
+        "targetBuyers": 5,
+        "discountedPrice": 36
+      }
+    },
+    {
+      "id": "prod_4",
+      "userId": "trader_2",
+      "traderName": "Kalingalinga Bakers",
+      "businessName": "Kalingalinga Bakers",
+      "location": "Lusaka",
+      "name": "Sweet Local Scones Box",
+      "price": 80,
+      "description": "Box of 6 soft, melt-in-the-mouth cardamum-infused breakfast scones. Baked fresh with local sunflower oil.",
+      "category": "Bakery",
+      "imageUrl": "asset:bakery",
+      "listingType": "clearance",
+      "compareKey": "scones-box",
+      "stockQty": 9,
+      "pickupAvailable": true,
+      "distanceKm": 1.8,
+      "expiryDate": "Best within 48 hours",
+      "foodSafetyVerified": true,
+      "originalPrice": 80
+    },
+    {
+      "id": "prod_5",
+      "userId": "trader_3",
+      "traderName": "Kabwata Solar & Electronics",
+      "businessName": "Kabwata Solar & Repair Solutions",
+      "location": "Kitwe",
+      "name": "Solar Battery & Inverter Repair Diagnostics",
+      "price": 450,
+      "description": "Professional troubleshooting of load-shedding backup solar batteries, terminal adjustments, components diagnostic, and testing.",
+      "category": "Hardware",
+      "imageUrl": "asset:electronics",
+      "listingType": "new",
+      "compareKey": "solar-kit-1000w",
+      "stockQty": 7,
+      "pickupAvailable": true,
+      "distanceKm": 4.5
+    },
+    {
+      "id": "prod_6",
+      "userId": "trader_4",
+      "traderName": "Chongwe Farmers Co-op",
+      "businessName": "Chongwe Farmers Co-op",
+      "location": "Chongwe",
+      "name": "Agri-Grow D-Compound Fertilizer (50kg Bag)",
+      "price": 580,
+      "description": "Co-op direct wholesale price on certified 50kg D-Compound basal fertilizer for maize and vegetable planting.",
+      "category": "Agriculture",
+      "imageUrl": "asset:agri",
+      "listingType": "farm_direct",
+      "compareKey": "fertilizer-50kg",
+      "stockQty": 120,
+      "pickupAvailable": true,
+      "distanceKm": 14,
+      "harvestDate": "In Depot Now",
+      "minBulkQty": 5,
+      "advanceReservation": true,
+      "groupBuy": {
+        "enabled": true,
+        "targetBuyers": 5,
+        "discountedPrice": 515
+      }
+    },
+    {
+      "id": "prod_7",
+      "userId": "trader_1",
+      "traderName": "Muyembe Organic Farms",
+      "businessName": "Muyembe Organic Farms",
+      "location": "Lusaka",
+      "name": "Agri-Grow D-Compound Fertilizer (50kg Bag)",
+      "price": 650,
+      "description": "50kg D-Compound fertilizer bag stocked in our Lusaka depot for same-day local neighborhood dispatch.",
+      "category": "Agriculture",
+      "imageUrl": "asset:agri",
+      "listingType": "new",
+      "compareKey": "fertilizer-50kg",
+      "stockQty": 34,
+      "pickupAvailable": true,
+      "distanceKm": 3.2
+    },
+    {
+      "id": "prod_8",
+      "userId": "trader_5",
+      "traderName": "Cairo Road Mobile & Gear",
+      "businessName": "Cairo Road Mobile & Gear",
+      "location": "Lusaka",
+      "name": "ZedPhone Spark 50MP Camera Smartphone (128GB)",
+      "price": 2290,
+      "description": "Dual-SIM 4G smartphone with 50MP AI night camera, 5000mAh battery, and 1-year local warranty.",
+      "category": "Electronics",
+      "imageUrl": "asset:electronics",
+      "listingType": "new",
+      "compareKey": "smartphone-50mp",
+      "stockQty": 12,
+      "pickupAvailable": true,
+      "distanceKm": 2.1,
+      "groupBuy": {
+        "enabled": true,
+        "targetBuyers": 3,
+        "discountedPrice": 2050
+      }
+    },
+    {
+      "id": "prod_9",
+      "userId": "trader_3",
+      "traderName": "Kabwata Solar & Electronics",
+      "businessName": "Kabwata Solar & Repair Solutions",
+      "location": "Lusaka",
+      "name": "ZedPhone Spark 50MP Camera Smartphone (128GB)",
+      "price": 2450,
+      "description": "50MP camera Android smartphone with free tempered glass screen protector and rapid charger included.",
+      "category": "Electronics",
+      "imageUrl": "asset:electronics",
+      "listingType": "new",
+      "compareKey": "smartphone-50mp",
+      "stockQty": 6,
+      "pickupAvailable": true,
+      "distanceKm": 3.9
+    },
+    {
+      "id": "prod_10",
+      "userId": "trader_5",
+      "traderName": "Cairo Road Mobile & Gear",
+      "businessName": "Cairo Road Mobile & Gear",
+      "location": "Lusaka",
+      "name": "Fujifilm X-T5 Mirrorless Camera & Tripod Kit (Rent/Day)",
+      "price": 185,
+      "description": "Rent a professional 40MP mirrorless camera with prime lens and tripod for weddings, events, or content shoots.",
+      "category": "Electronics",
+      "imageUrl": "asset:camera",
+      "listingType": "rent",
+      "compareKey": "camera-rental",
+      "stockQty": 4,
+      "pickupAvailable": true,
+      "distanceKm": 2.1,
+      "rentalRatePerDay": 185,
+      "rentalDeposit": 500
+    },
+    {
+      "id": "prod_11",
+      "userId": "trader_5",
+      "traderName": "Cairo Road Mobile & Gear",
+      "businessName": "Cairo Road Mobile & Gear",
+      "location": "Lusaka",
+      "name": "Pre-Owned Mirrorless Camera Body (Resell)",
+      "price": 1950,
+      "originalPrice": 3200,
+      "description": "Previously owned studio camera, tested and certified with clean sensor and two batteries.",
+      "category": "Electronics",
+      "imageUrl": "asset:camera",
+      "listingType": "resell",
+      "compareKey": "camera-resell",
+      "stockQty": 2,
+      "pickupAvailable": true,
+      "distanceKm": 2.1,
+      "conditionGrade": "Like New"
+    },
+    {
+      "id": "prod_12",
+      "userId": "trader_6",
+      "traderName": "Kamwala FreshSave Market",
+      "businessName": "Kamwala FreshSave Market",
+      "location": "Lusaka",
+      "name": "Golden Harvest Sunflower Oil & Beans Pantry Bundle",
+      "price": 145,
+      "originalPrice": 230,
+      "description": "Near-expiry surplus supermarket pack: 750ml sunflower oil, 1kg whole-grain flour, chickpeas & kidney beans.",
+      "category": "Groceries",
+      "imageUrl": "asset:grocery",
+      "listingType": "clearance",
+      "compareKey": "pantry-bundle",
+      "stockQty": 22,
+      "pickupAvailable": true,
+      "distanceKm": 2.6,
+      "expiryDate": "Best Before Next Month",
+      "foodSafetyVerified": true,
+      "groupBuy": {
+        "enabled": true,
+        "targetBuyers": 4,
+        "discountedPrice": 120
+      }
+    },
+    {
+      "id": "prod_13",
+      "userId": "trader_4",
+      "traderName": "Chongwe Farmers Co-op",
+      "businessName": "Chongwe Farmers Co-op",
+      "location": "Chisamba",
+      "name": "Premium Golden Maize Grain (50kg Sack)",
+      "price": 310,
+      "description": "Sun-dried grade-A maize kernels directly from Chongwe & Chisamba smallholders. Reserve upcoming harvest bags.",
+      "category": "Agriculture",
+      "imageUrl": "asset:agri",
+      "listingType": "farm_direct",
+      "compareKey": "maize-50kg",
+      "stockQty": 95,
+      "pickupAvailable": true,
+      "distanceKm": 11.4,
+      "harvestDate": "Harvest Ready Nov 24",
+      "minBulkQty": 3,
+      "advanceReservation": true
+    }
+  ],
+  "files": [],
+  "orders": [],
+  "chats": [],
+  "reviews": [],
+  "wishlists": [],
+  "groupBuys": [
+    {
+      "id": "gb_1",
+      "productId": "prod_6",
+      "productName": "Agri-Grow D-Compound Fertilizer (50kg Bag)",
+      "businessName": "Chongwe Farmers Co-op",
+      "traderId": "trader_4",
+      "location": "Chongwe",
+      "imageUrl": "asset:agri",
+      "regularPrice": 580,
+      "groupPrice": 515,
+      "targetBuyers": 5,
+      "currentBuyers": 3,
+      "participants": [
+        {
+          "userId": "cust_10",
+          "userName": "Mutinta H.",
+          "qty": 2,
+          "joinedAt": "2026-11-15T14:26:43.313Z"
+        },
+        {
+          "userId": "cust_11",
+          "userName": "Chisomo K.",
+          "qty": 1,
+          "joinedAt": "2026-11-15T14:56:43.313Z"
+        },
+        {
+          "userId": "cust_12",
+          "userName": "Kaluba M.",
+          "qty": 2,
+          "joinedAt": "2026-11-15T15:56:43.313Z"
+        }
+      ],
+      "status": "Open",
+      "expiresAt": "2026-11-17T16:26:43.313Z"
+    },
+    {
+      "id": "gb_2",
+      "productId": "prod_12",
+      "productName": "Golden Harvest Sunflower Oil & Beans Pantry Bundle",
+      "businessName": "Kamwala FreshSave Market",
+      "traderId": "trader_6",
+      "location": "Lusaka",
+      "imageUrl": "asset:grocery",
+      "regularPrice": 145,
+      "groupPrice": 120,
+      "targetBuyers": 4,
+      "currentBuyers": 3,
+      "participants": [
+        {
+          "userId": "cust_13",
+          "userName": "Natasha C.",
+          "qty": 1,
+          "joinedAt": "2026-11-15T15:26:43.313Z"
+        },
+        {
+          "userId": "cust_14",
+          "userName": "Thandiwe S.",
+          "qty": 2,
+          "joinedAt": "2026-11-15T15:46:43.313Z"
+        },
+        {
+          "userId": "cust_15",
+          "userName": "Mumba L.",
+          "qty": 1,
+          "joinedAt": "2026-11-15T16:11:43.313Z"
+        }
+      ],
+      "status": "Open",
+      "expiresAt": "2026-11-16T16:26:43.313Z"
+    }
+  ],
+  "negotiations": [],
+  "liveStreams": [
+    {
+      "id": "live_1",
+      "traderId": "trader_1",
+      "traderName": "Muyembe Organic Farms",
+      "businessName": "Muyembe Organic Farms",
+      "location": "Lusaka",
+      "title": "Morning Harvest Walk: Chisamba Strawberries & Greens",
+      "description": "Watch today's fresh strawberry crates being packed in Chisamba. Ask questions live and claim 10% live-stream discount!",
+      "status": "Live",
+      "viewerCount": 47,
+      "featuredProductIds": [
+        "prod_1",
+        "prod_2"
+      ],
+      "liveDiscountPct": 10,
+      "startedAt": "2026-11-15T15:56:43.313Z",
+      "messages": [
+        {
+          "id": "lm_1",
+          "senderName": "Chileshe",
+          "text": "Are the strawberries picked this morning?",
+          "createdAt": "2026-11-15T16:16:43.314Z"
+        },
+        {
+          "id": "lm_2",
+          "senderName": "Muyembe Organic Farms",
+          "text": "Yes! Picked at 06:00 AM today, ready for Lusaka dispatch.",
+          "createdAt": "2026-11-15T16:18:43.314Z"
+        }
+      ]
+    },
+    {
+      "id": "live_2",
+      "traderId": "trader_5",
+      "traderName": "Cairo Road Mobile & Gear",
+      "businessName": "Cairo Road Mobile & Gear",
+      "location": "Lusaka",
+      "title": "Camera Test: ZedPhone Spark 50MP vs Rental Gear",
+      "description": "Live hands-on low-light camera test and Q&A on budget phones under K2,500 plus weekend camera rentals.",
+      "status": "Live",
+      "viewerCount": 32,
+      "featuredProductIds": [
+        "prod_8",
+        "prod_10"
+      ],
+      "liveDiscountPct": 5,
+      "startedAt": "2026-11-15T16:11:43.314Z",
+      "messages": [
+        {
+          "id": "lm_3",
+          "senderName": "Bwalya",
+          "text": "Does it support MTN and Airtel dual 4G SIMs?",
+          "createdAt": "2026-11-15T16:21:43.314Z"
+        }
+      ]
+    }
+  ],
+  "riders": [
+    {
+      "id": "rider_1",
+      "name": "Mwila Banda",
+      "vehicle": "Motorbike",
+      "location": "Lusaka",
+      "rating": 4.9,
+      "etaMins": 18,
+      "baseFee": 25,
+      "consolidatedDiscount": 12,
+      "available": true
+    },
+    {
+      "id": "rider_2",
+      "name": "Chansa Phiri",
+      "vehicle": "Cargo Tricycle",
+      "location": "Lusaka",
+      "rating": 4.8,
+      "etaMins": 26,
+      "baseFee": 35,
+      "consolidatedDiscount": 15,
+      "available": true
+    },
+    {
+      "id": "rider_3",
+      "name": "Mutale Zulu",
+      "vehicle": "Motorbike",
+      "location": "Kitwe",
+      "rating": 4.9,
+      "etaMins": 20,
+      "baseFee": 25,
+      "consolidatedDiscount": 10,
+      "available": true
+    },
+    {
+      "id": "rider_4",
+      "name": "Luyando Mulenga",
+      "vehicle": "Van",
+      "location": "Chongwe",
+      "rating": 4.7,
+      "etaMins": 35,
+      "baseFee": 45,
+      "consolidatedDiscount": 20,
+      "available": true
+    },
+    {
+      "id": "rider_5",
+      "name": "Kabwe Tembo",
+      "vehicle": "Motorbike",
+      "location": "Ndola",
+      "rating": 4.8,
+      "etaMins": 22,
+      "baseFee": 25,
+      "consolidatedDiscount": 10,
+      "available": true
+    }
+  ],
+  "rewards": {},
+  "fraudAlerts": [
+    {
+      "id": "fraud_1",
+      "targetType": "Listing",
+      "targetId": "ext_dup_882",
+      "title": "Duplicate Discount Smartphone Listing Blocked",
+      "riskLevel": "High",
+      "reason": "AI detected identical serial metadata and below-cost pricing (ZK 350) from an unverified seller account. Quarantined before checkout.",
+      "flaggedAt": "2026-11-15T14:26:43.314Z",
+      "resolved": false
+    }
+  ]
+}

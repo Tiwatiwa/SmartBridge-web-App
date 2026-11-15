@@ -1,0 +1,757 @@
+{
+  "entities": {
+    "AdminAccount": {
+      "title": "AdminAccount",
+      "description": "Authorized platform administrator record keyed by Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "grantedBy": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "createdAt"]
+    },
+    "UserPublicProfile": {
+      "title": "UserPublicProfile",
+      "description": "Public storefront and marketplace identity for a user or trader without PII.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["customer", "trader", "admin"]
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "businessName": {
+          "type": "string",
+          "maxLength": 140
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "isFarmer": {
+          "type": "boolean"
+        },
+        "verifiedBusiness": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "name", "role", "location", "createdAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII record containing user email and contact details.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Marketplace product listing owned by a trader or reseller.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "traderName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "businessName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "price": {
+          "type": "number"
+        },
+        "originalPrice": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1200
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "listingType": {
+          "type": "string",
+          "enum": ["new", "rent", "resell", "farm_direct", "clearance"]
+        },
+        "stockQty": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "businessName", "location", "name", "price", "category", "createdAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase order routed to a seller.",
+      "type": "object",
+      "properties": {
+        "customerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "customerLocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "traderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "businessName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "totalAmount": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Preparing", "Out for Delivery", "Delivered"]
+        },
+        "paymentMethod": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "deliveryPin": {
+          "type": "string",
+          "maxLength": 8
+        },
+        "privacyConsent": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["customerId", "customerName", "customerLocation", "traderId", "businessName", "totalAmount", "status", "paymentMethod", "privacyConsent", "createdAt"]
+    },
+    "OrderLineItem": {
+      "title": "OrderLineItem",
+      "description": "Line item subcollection document belonging to an order.",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "price": {
+          "type": "number"
+        },
+        "quantity": {
+          "type": "number"
+        }
+      },
+      "required": ["orderId", "productId", "productName", "price", "quantity"]
+    },
+    "ProductReview": {
+      "title": "ProductReview",
+      "description": "Customer rating and review for a marketplace product.",
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "rating": {
+          "type": "number"
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["productId", "customerId", "customerName", "rating", "comment", "createdAt"]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "Saved product in a user's personal wishlist.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "productId", "createdAt"]
+    },
+    "NegotiationOffer": {
+      "title": "NegotiationOffer",
+      "description": "Customer price negotiation offer with a seller.",
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "traderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "listedPrice": {
+          "type": "number"
+        },
+        "offerPrice": {
+          "type": "number"
+        },
+        "counterPrice": {
+          "type": "number"
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Accepted", "Countered", "Declined"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["productId", "productName", "traderId", "customerId", "listedPrice", "offerPrice", "status", "createdAt"]
+    },
+    "GroupBuy": {
+      "title": "GroupBuy",
+      "description": "Community group buying campaign.",
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "traderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "creatorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "regularPrice": {
+          "type": "number"
+        },
+        "groupPrice": {
+          "type": "number"
+        },
+        "targetBuyers": {
+          "type": "number"
+        },
+        "currentBuyers": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Open", "Unlocked", "Completed"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["productId", "productName", "traderId", "creatorId", "regularPrice", "groupPrice", "targetBuyers", "currentBuyers", "status", "createdAt"]
+    },
+    "GroupBuyParticipant": {
+      "title": "GroupBuyParticipant",
+      "description": "Participant subcollection record in a community group buy.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "qty": {
+          "type": "number"
+        },
+        "joinedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "userName", "qty", "joinedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Direct buyer-to-seller message.",
+      "type": "object",
+      "properties": {
+        "senderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "senderName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "receiverId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["senderId", "senderName", "receiverId", "text", "createdAt"]
+    },
+    "StorageFile": {
+      "title": "StorageFile",
+      "description": "Uploaded Firebase Storage asset metadata.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fileName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "fileSize": {
+          "type": "number"
+        },
+        "fileType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "filePath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "fileName", "fileSize", "fileType", "filePath", "createdAt"]
+    },
+    "UserRewards": {
+      "title": "UserRewards",
+      "description": "Bridge loyalty points and tier status per customer.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "points": {
+          "type": "number"
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["Seedling", "Connector", "Bridge Champion"]
+        },
+        "redeemedPoints": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "points", "tier", "redeemedPoints", "updatedAt"]
+    },
+    "LiveStream": {
+      "title": "LiveStream",
+      "description": "Seller live shopping demonstration stream.",
+      "type": "object",
+      "properties": {
+        "traderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "businessName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Live", "Upcoming", "Ended"]
+        },
+        "liveDiscountPct": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["traderId", "businessName", "title", "status", "liveDiscountPct", "createdAt"]
+    },
+    "LiveStreamMessage": {
+      "title": "LiveStreamMessage",
+      "description": "Live Q&A comment posted during a livestream.",
+      "type": "object",
+      "properties": {
+        "senderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "senderName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["senderId", "senderName", "text", "createdAt"]
+    },
+    "FraudAlert": {
+      "title": "FraudAlert",
+      "description": "Admin-managed fraud review alert.",
+      "type": "object",
+      "properties": {
+        "targetType": {
+          "type": "string",
+          "enum": ["Order", "Listing", "Review"]
+        },
+        "targetId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "riskLevel": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High"]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "resolved": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["targetType", "targetId", "title", "riskLevel", "reason", "resolved", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminAccount" },
+      "description": "Authorized admin accounts collection."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserPublicProfile" },
+      "description": "Public storefront profile for customers and traders."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Private PII document isolated from public profile reads."
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Marketplace product catalog."
+    },
+    "/products/{productId}/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/ProductReview" },
+      "description": "Verified product reviews subcollection."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders routed to traders."
+    },
+    "/orders/{orderId}/items/{itemId}": {
+      "schema": { "$ref": "#/entities/OrderLineItem" },
+      "description": "Line items belonging to an order."
+    },
+    "/wishlists/{wishlistId}": {
+      "schema": { "$ref": "#/entities/WishlistItem" },
+      "description": "Customer wishlist items."
+    },
+    "/negotiations/{negotiationId}": {
+      "schema": { "$ref": "#/entities/NegotiationOffer" },
+      "description": "Buyer-seller price negotiation offers."
+    },
+    "/groupBuys/{groupBuyId}": {
+      "schema": { "$ref": "#/entities/GroupBuy" },
+      "description": "Community group buying deals."
+    },
+    "/groupBuys/{groupBuyId}/participants/{participantId}": {
+      "schema": { "$ref": "#/entities/GroupBuyParticipant" },
+      "description": "Participants joined in a group buy."
+    },
+    "/chats/{chatId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Direct buyer-seller chat messages."
+    },
+    "/files/{fileId}": {
+      "schema": { "$ref": "#/entities/StorageFile" },
+      "description": "Uploaded file metadata records."
+    },
+    "/rewards/{userId}": {
+      "schema": { "$ref": "#/entities/UserRewards" },
+      "description": "Bridge loyalty points per user."
+    },
+    "/liveStreams/{streamId}": {
+      "schema": { "$ref": "#/entities/LiveStream" },
+      "description": "Seller live selling streams."
+    },
+    "/liveStreams/{streamId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/LiveStreamMessage" },
+      "description": "Live Q&A messages inside a livestream."
+    },
+    "/fraudAlerts/{alertId}": {
+      "schema": { "$ref": "#/entities/FraudAlert" },
+      "description": "Platform fraud detection alerts managed by admin."
+    }
+  }
+}

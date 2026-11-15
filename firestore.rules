@@ -1,0 +1,961 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // GLOBAL SAFETY NET (Default-Deny Catch-All)
+    // =========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // HARDENED GLOBAL HELPERS
+    // =========================================================================
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Zero-DB-read root admin check (safe for both single-doc and list queries)
+    function isRootAdmin() {
+      return isSignedIn() && (
+        request.auth.uid == '61wF1x8kb7UxJ6GOW7d9450IkYN2' ||
+        (request.auth.token.email == 'tiwongenkhoma@gmail.com' && request.auth.token.email_verified == true)
+      );
+    }
+
+    // Full admin check including /admins/{uid} collection (single-doc / writes only)
+    function isAdmin() {
+      return isRootAdmin() || (
+        isVerifiedUser() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string &&
+        id.size() >= 1 &&
+        id.size() <= 128 &&
+        id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidStr(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidOptionalStr(data, field, maxLen) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalBool(data, field) {
+      return !(field in data) || data[field] is bool;
+    }
+
+    function isValidOptionalTimestamp(data, field) {
+      return !(field in data) || data[field] is timestamp;
+    }
+
+    function isValidOptionalNonNegativeNumber(data, field) {
+      return !(field in data) || (data[field] is number && data[field] >= 0);
+    }
+
+    // =========================================================================
+    // ENTITY VALIDATION BLUEPRINTS (Anti-Update-Gap)
+    // =========================================================================
+    function isValidAdminAccount(data) {
+      return data.keys().hasAll(['uid', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'grantedBy', 'createdAt']) &&
+        isValidId(data.uid) &&
+        isValidOptionalStr(data, 'email', 200) &&
+        isValidOptionalStr(data, 'grantedBy', 128) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidUserPublicProfile(data) {
+      return data.keys().hasAll(['uid', 'name', 'role', 'location', 'createdAt']) &&
+        data.keys().hasOnly([
+          'uid', 'name', 'role', 'location', 'businessName', 'category',
+          'description', 'isFarmer', 'verifiedBusiness', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.uid) &&
+        isValidStr(data.name, 1, 120) &&
+        data.role in ['customer', 'trader', 'admin'] &&
+        isValidStr(data.location, 1, 80) &&
+        isValidOptionalStr(data, 'businessName', 140) &&
+        isValidOptionalStr(data, 'category', 80) &&
+        isValidOptionalStr(data, 'description', 600) &&
+        isValidOptionalBool(data, 'isFarmer') &&
+        isValidOptionalBool(data, 'verifiedBusiness') &&
+        data.createdAt is timestamp &&
+        isValidOptionalTimestamp(data, 'updatedAt');
+    }
+
+    function isValidUserPrivateInfo(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'phone', 'createdAt', 'updatedAt']) &&
+        isValidId(data.uid) &&
+        isValidStr(data.email, 3, 200) &&
+        isValidOptionalStr(data, 'phone', 40) &&
+        data.createdAt is timestamp &&
+        isValidOptionalTimestamp(data, 'updatedAt');
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['userId', 'businessName', 'location', 'name', 'price', 'category', 'createdAt']) &&
+        data.keys().hasOnly([
+          'userId', 'traderName', 'businessName', 'location', 'name', 'price',
+          'originalPrice', 'description', 'category', 'imageUrl', 'listingType',
+          'stockQty', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.userId) &&
+        isValidOptionalStr(data, 'traderName', 120) &&
+        isValidStr(data.businessName, 1, 140) &&
+        isValidStr(data.location, 1, 80) &&
+        isValidStr(data.name, 1, 160) &&
+        data.price is number && data.price > 0 &&
+        isValidOptionalNonNegativeNumber(data, 'originalPrice') &&
+        isValidOptionalStr(data, 'description', 1200) &&
+        isValidStr(data.category, 1, 80) &&
+        isValidOptionalStr(data, 'imageUrl', 1000) &&
+        (!('listingType' in data) || data.listingType in ['new', 'rent', 'resell', 'farm_direct', 'clearance']) &&
+        isValidOptionalNonNegativeNumber(data, 'stockQty') &&
+        data.createdAt is timestamp &&
+        isValidOptionalTimestamp(data, 'updatedAt');
+    }
+
+    function isValidProductReview(data) {
+      return data.keys().hasAll(['productId', 'customerId', 'customerName', 'rating', 'comment', 'createdAt']) &&
+        data.keys().hasOnly(['productId', 'customerId', 'customerName', 'rating', 'comment', 'createdAt']) &&
+        isValidId(data.productId) &&
+        isValidId(data.customerId) &&
+        isValidStr(data.customerName, 1, 120) &&
+        data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+        isValidStr(data.comment, 1, 1000) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+          'customerId', 'customerName', 'customerLocation', 'traderId',
+          'businessName', 'totalAmount', 'status', 'paymentMethod',
+          'privacyConsent', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'customerId', 'customerName', 'customerLocation', 'traderId',
+          'businessName', 'totalAmount', 'status', 'paymentMethod',
+          'deliveryPin', 'privacyConsent', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.customerId) &&
+        isValidStr(data.customerName, 1, 120) &&
+        isValidStr(data.customerLocation, 1, 80) &&
+        isValidId(data.traderId) &&
+        isValidStr(data.businessName, 1, 140) &&
+        data.totalAmount is number && data.totalAmount >= 0 &&
+        data.status in ['Pending', 'Preparing', 'Out for Delivery', 'Delivered'] &&
+        isValidStr(data.paymentMethod, 1, 60) &&
+        isValidOptionalStr(data, 'deliveryPin', 8) &&
+        data.privacyConsent is bool &&
+        data.createdAt is timestamp &&
+        isValidOptionalTimestamp(data, 'updatedAt');
+    }
+
+    function isValidOrderLineItem(data) {
+      return data.keys().hasAll(['orderId', 'productId', 'productName', 'price', 'quantity']) &&
+        data.keys().hasOnly(['orderId', 'productId', 'productName', 'price', 'quantity']) &&
+        isValidId(data.orderId) &&
+        isValidId(data.productId) &&
+        isValidStr(data.productName, 1, 160) &&
+        data.price is number && data.price >= 0 &&
+        data.quantity is number && data.quantity >= 1;
+    }
+
+    function isValidWishlistItem(data) {
+      return data.keys().hasAll(['userId', 'productId', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'productId', 'createdAt']) &&
+        isValidId(data.userId) &&
+        isValidId(data.productId) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidNegotiationOffer(data) {
+      return data.keys().hasAll(['productId', 'productName', 'traderId', 'customerId', 'listedPrice', 'offerPrice', 'status', 'createdAt']) &&
+        data.keys().hasOnly([
+          'productId', 'productName', 'traderId', 'customerId', 'listedPrice',
+          'offerPrice', 'counterPrice', 'message', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.productId) &&
+        isValidStr(data.productName, 1, 160) &&
+        isValidId(data.traderId) &&
+        isValidId(data.customerId) &&
+        data.listedPrice is number && data.listedPrice > 0 &&
+        data.offerPrice is number && data.offerPrice > 0 &&
+        isValidOptionalNonNegativeNumber(data, 'counterPrice') &&
+        isValidOptionalStr(data, 'message', 400) &&
+        data.status in ['Pending', 'Accepted', 'Countered', 'Declined'] &&
+        data.createdAt is timestamp &&
+        isValidOptionalTimestamp(data, 'updatedAt');
+    }
+
+    function isValidGroupBuy(data) {
+      return data.keys().hasAll([
+          'productId', 'productName', 'traderId', 'creatorId',
+          'regularPrice', 'groupPrice', 'targetBuyers', 'currentBuyers',
+          'status', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'productId', 'productName', 'traderId', 'creatorId',
+          'regularPrice', 'groupPrice', 'targetBuyers', 'currentBuyers',
+          'status', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.productId) &&
+        isValidStr(data.productName, 1, 160) &&
+        isValidId(data.traderId) &&
+        isValidId(data.creatorId) &&
+        data.regularPrice is number && data.regularPrice > 0 &&
+        data.groupPrice is number && data.groupPrice > 0 && data.groupPrice <= data.regularPrice &&
+        data.targetBuyers is number && data.targetBuyers >= 2 &&
+        data.currentBuyers is number && data.currentBuyers >= 1 &&
+        data.status in ['Open', 'Unlocked', 'Completed'] &&
+        data.createdAt is timestamp &&
+        isValidOptionalTimestamp(data, 'updatedAt');
+    }
+
+    function isValidGroupBuyParticipant(data) {
+      return data.keys().hasAll(['userId', 'userName', 'qty', 'joinedAt']) &&
+        data.keys().hasOnly(['userId', 'userName', 'qty', 'joinedAt']) &&
+        isValidId(data.userId) &&
+        isValidStr(data.userName, 1, 120) &&
+        data.qty is number && data.qty >= 1 &&
+        data.joinedAt is timestamp;
+    }
+
+    function isValidChatMessage(data) {
+      return data.keys().hasAll(['senderId', 'senderName', 'receiverId', 'text', 'createdAt']) &&
+        data.keys().hasOnly(['senderId', 'senderName', 'receiverId', 'text', 'createdAt']) &&
+        isValidId(data.senderId) &&
+        isValidStr(data.senderName, 1, 120) &&
+        isValidId(data.receiverId) &&
+        isValidStr(data.text, 1, 2000) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidStorageFile(data) {
+      return data.keys().hasAll(['userId', 'fileName', 'fileSize', 'fileType', 'filePath', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'fileName', 'fileSize', 'fileType', 'filePath', 'createdAt']) &&
+        isValidId(data.userId) &&
+        isValidStr(data.fileName, 1, 200) &&
+        data.fileSize is number && data.fileSize >= 0 &&
+        isValidStr(data.fileType, 1, 120) &&
+        isValidStr(data.filePath, 1, 1000) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidUserRewards(data) {
+      return data.keys().hasAll(['userId', 'points', 'tier', 'redeemedPoints', 'updatedAt']) &&
+        data.keys().hasOnly(['userId', 'points', 'tier', 'redeemedPoints', 'updatedAt']) &&
+        isValidId(data.userId) &&
+        data.points is number && data.points >= 0 &&
+        data.tier in ['Seedling', 'Connector', 'Bridge Champion'] &&
+        data.redeemedPoints is number && data.redeemedPoints >= 0 &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidLiveStream(data) {
+      return data.keys().hasAll(['traderId', 'businessName', 'title', 'status', 'liveDiscountPct', 'createdAt']) &&
+        data.keys().hasOnly([
+          'traderId', 'businessName', 'title', 'description',
+          'status', 'liveDiscountPct', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.traderId) &&
+        isValidStr(data.businessName, 1, 140) &&
+        isValidStr(data.title, 1, 160) &&
+        isValidOptionalStr(data, 'description', 600) &&
+        data.status in ['Live', 'Upcoming', 'Ended'] &&
+        data.liveDiscountPct is number && data.liveDiscountPct >= 0 && data.liveDiscountPct <= 90 &&
+        data.createdAt is timestamp &&
+        isValidOptionalTimestamp(data, 'updatedAt');
+    }
+
+    function isValidLiveStreamMessage(data) {
+      return data.keys().hasAll(['senderId', 'senderName', 'text', 'createdAt']) &&
+        data.keys().hasOnly(['senderId', 'senderName', 'text', 'createdAt']) &&
+        isValidId(data.senderId) &&
+        isValidStr(data.senderName, 1, 120) &&
+        isValidStr(data.text, 1, 600) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidFraudAlert(data) {
+      return data.keys().hasAll(['targetType', 'targetId', 'title', 'riskLevel', 'reason', 'resolved', 'createdAt']) &&
+        data.keys().hasOnly(['targetType', 'targetId', 'title', 'riskLevel', 'reason', 'resolved', 'createdAt', 'updatedAt']) &&
+        data.targetType in ['Order', 'Listing', 'Review'] &&
+        isValidId(data.targetId) &&
+        isValidStr(data.title, 1, 160) &&
+        data.riskLevel in ['Low', 'Medium', 'High'] &&
+        isValidStr(data.reason, 1, 600) &&
+        data.resolved is bool &&
+        data.createdAt is timestamp &&
+        isValidOptionalTimestamp(data, 'updatedAt');
+    }
+
+    // =========================================================================
+    // 1. ADMINS COLLECTION (Root Admin UID: 61wF1x8kb7UxJ6GOW7d9450IkYN2)
+    // =========================================================================
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (isOwner(adminId) || isAdmin());
+      allow list: if isRootAdmin();
+      allow create: if isSignedIn() &&
+        isValidId(adminId) &&
+        isValidAdminAccount(incoming()) &&
+        incoming().uid == adminId &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update: if isSignedIn() &&
+        isValidId(adminId) &&
+        isValidAdminAccount(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['email', 'grantedBy']) &&
+        isAdmin();
+      allow delete: if isSignedIn() &&
+        isValidId(adminId) &&
+        adminId != '61wF1x8kb7UxJ6GOW7d9450IkYN2' &&
+        isAdmin();
+    }
+
+    // =========================================================================
+    // 2. USERS PUBLIC PROFILE & ISOLATED PRIVATE PII SUBCOLLECTION
+    // =========================================================================
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isRootAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn() &&
+        isValidId(userId) &&
+        isValidUserPublicProfile(incoming()) &&
+        incoming().uid == userId &&
+        incoming().createdAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            isOwner(userId) &&
+            !('updatedAt' in incoming()) &&
+            incoming().role in ['customer', 'trader'] &&
+            (!('verifiedBusiness' in incoming()) || incoming().verifiedBusiness == false)
+          ) ||
+          isAdmin()
+        );
+      allow update: if isSignedIn() &&
+        isValidId(userId) &&
+        isValidUserPublicProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            isOwner(userId) &&
+            incoming().role == existing().role &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'name', 'location', 'businessName', 'category', 'description', 'isFarmer', 'updatedAt'
+            ])
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(userId) && isAdmin();
+
+      match /private/{docId} {
+        allow get: if isSignedIn() && isValidId(userId) && isValidId(docId) && (isOwner(userId) || isAdmin());
+        allow list: if isRootAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+        allow create: if isSignedIn() &&
+          isValidId(userId) &&
+          isValidId(docId) &&
+          isValidUserPrivateInfo(incoming()) &&
+          incoming().uid == userId &&
+          incoming().createdAt == request.time &&
+          (
+            (
+              isVerifiedUser() &&
+              isOwner(userId) &&
+              !('updatedAt' in incoming()) &&
+              (
+                exists(/databases/$(database)/documents/users/$(userId)) ||
+                existsAfter(/databases/$(database)/documents/users/$(userId))
+              )
+            ) ||
+            isAdmin()
+          );
+        allow update: if isSignedIn() &&
+          isValidId(userId) &&
+          isValidId(docId) &&
+          isValidUserPrivateInfo(incoming()) &&
+          incoming().uid == existing().uid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          (
+            (
+              isVerifiedUser() &&
+              isOwner(userId) &&
+              exists(/databases/$(database)/documents/users/$(userId)) &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['email', 'phone', 'updatedAt'])
+            ) ||
+            isAdmin()
+          );
+        allow delete: if isSignedIn() && isValidId(userId) && isValidId(docId) && (isOwner(userId) || isAdmin());
+      }
+    }
+
+    // =========================================================================
+    // 3. PRODUCTS & PRODUCT REVIEWS
+    // =========================================================================
+    match /products/{productId} {
+      allow get: if isSignedIn() && isValidId(productId);
+      allow list: if isRootAdmin() || (
+        isSignedIn() &&
+        resource.data.userId is string &&
+        resource.data.price > 0
+      );
+      allow create: if isSignedIn() &&
+        isValidId(productId) &&
+        isValidProduct(incoming()) &&
+        incoming().createdAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            incoming().userId == request.auth.uid &&
+            !('updatedAt' in incoming()) &&
+            exists(/databases/$(database)/documents/users/$(incoming().userId))
+          ) ||
+          isAdmin()
+        );
+      allow update: if isSignedIn() &&
+        isValidId(productId) &&
+        isValidProduct(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            isOwner(existing().userId) &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'name', 'price', 'originalPrice', 'description', 'category',
+              'imageUrl', 'listingType', 'stockQty', 'location',
+              'businessName', 'traderName', 'updatedAt'
+            ])
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(productId) && (isOwner(existing().userId) || isAdmin());
+
+      match /reviews/{reviewId} {
+        allow get: if isSignedIn() && isValidId(productId) && isValidId(reviewId);
+        allow list: if isRootAdmin() || (
+          isSignedIn() &&
+          resource.data.productId == productId &&
+          resource.data.rating >= 1
+        );
+        allow create: if isSignedIn() &&
+          isValidId(productId) &&
+          isValidId(reviewId) &&
+          isValidProductReview(incoming()) &&
+          incoming().productId == productId &&
+          incoming().createdAt == request.time &&
+          (
+            (
+              isVerifiedUser() &&
+              incoming().customerId == request.auth.uid &&
+              exists(/databases/$(database)/documents/products/$(productId))
+            ) ||
+            isAdmin()
+          );
+        allow update: if isSignedIn() &&
+          isValidId(productId) &&
+          isValidId(reviewId) &&
+          isValidProductReview(incoming()) &&
+          incoming().productId == existing().productId &&
+          incoming().customerId == existing().customerId &&
+          incoming().createdAt == existing().createdAt &&
+          isAdmin();
+        allow delete: if isSignedIn() && isValidId(productId) && isValidId(reviewId) && (isOwner(existing().customerId) || isAdmin());
+      }
+    }
+
+    // =========================================================================
+    // 4. ORDERS & ORDER LINE ITEMS
+    // =========================================================================
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && isValidId(orderId) && (
+        isOwner(existing().customerId) ||
+        isOwner(existing().traderId) ||
+        isAdmin()
+      );
+      allow list: if isRootAdmin() || (
+        isSignedIn() &&
+        (resource.data.customerId == request.auth.uid || resource.data.traderId == request.auth.uid)
+      );
+      allow create: if isSignedIn() &&
+        isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().createdAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            incoming().customerId == request.auth.uid &&
+            incoming().status == 'Pending' &&
+            incoming().privacyConsent == true &&
+            !('updatedAt' in incoming()) &&
+            exists(/databases/$(database)/documents/users/$(incoming().customerId)) &&
+            exists(/databases/$(database)/documents/users/$(incoming().traderId))
+          ) ||
+          isAdmin()
+        );
+      allow update: if isSignedIn() &&
+        isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().customerId == existing().customerId &&
+        incoming().traderId == existing().traderId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            existing().status != 'Delivered' &&
+            isOwner(existing().traderId) &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+            (
+              (existing().status == 'Pending' && incoming().status == 'Preparing') ||
+              (existing().status == 'Preparing' && incoming().status == 'Out for Delivery') ||
+              (existing().status == 'Out for Delivery' && incoming().status == 'Delivered')
+            )
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(orderId) && isAdmin();
+
+      match /items/{itemId} {
+        allow get: if isSignedIn() && isValidId(orderId) && isValidId(itemId) && (
+          get(/databases/$(database)/documents/orders/$(orderId)).data.customerId == request.auth.uid ||
+          get(/databases/$(database)/documents/orders/$(orderId)).data.traderId == request.auth.uid ||
+          isAdmin()
+        );
+        allow list: if isRootAdmin();
+        allow create: if isSignedIn() &&
+          isValidId(orderId) &&
+          isValidId(itemId) &&
+          isValidOrderLineItem(incoming()) &&
+          incoming().orderId == orderId &&
+          (
+            (
+              isVerifiedUser() &&
+              (
+                get(/databases/$(database)/documents/orders/$(orderId)).data.customerId == request.auth.uid ||
+                getAfter(/databases/$(database)/documents/orders/$(orderId)).data.customerId == request.auth.uid
+              ) &&
+              exists(/databases/$(database)/documents/products/$(incoming().productId))
+            ) ||
+            isAdmin()
+          );
+        allow update: if isSignedIn() &&
+          isValidId(orderId) &&
+          isValidId(itemId) &&
+          isValidOrderLineItem(incoming()) &&
+          incoming().orderId == existing().orderId &&
+          isAdmin();
+        allow delete: if isSignedIn() && isValidId(orderId) && isValidId(itemId) && isAdmin();
+      }
+    }
+
+    // =========================================================================
+    // 5. WISHLISTS
+    // =========================================================================
+    match /wishlists/{wishlistId} {
+      allow get: if isSignedIn() && isValidId(wishlistId) && (isOwner(existing().userId) || isAdmin());
+      allow list: if isRootAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() &&
+        isValidId(wishlistId) &&
+        isValidWishlistItem(incoming()) &&
+        incoming().createdAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            incoming().userId == request.auth.uid &&
+            exists(/databases/$(database)/documents/products/$(incoming().productId))
+          ) ||
+          isAdmin()
+        );
+      allow update: if isSignedIn() &&
+        isValidId(wishlistId) &&
+        isValidWishlistItem(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        isAdmin();
+      allow delete: if isSignedIn() && isValidId(wishlistId) && (isOwner(existing().userId) || isAdmin());
+    }
+
+    // =========================================================================
+    // 6. NEGOTIATIONS
+    // =========================================================================
+    match /negotiations/{negotiationId} {
+      allow get: if isSignedIn() && isValidId(negotiationId) && (
+        isOwner(existing().customerId) ||
+        isOwner(existing().traderId) ||
+        isAdmin()
+      );
+      allow list: if isRootAdmin() || (
+        isSignedIn() &&
+        (resource.data.customerId == request.auth.uid || resource.data.traderId == request.auth.uid)
+      );
+      allow create: if isSignedIn() &&
+        isValidId(negotiationId) &&
+        isValidNegotiationOffer(incoming()) &&
+        incoming().createdAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            incoming().customerId == request.auth.uid &&
+            incoming().status == 'Pending' &&
+            !('updatedAt' in incoming()) &&
+            exists(/databases/$(database)/documents/products/$(incoming().productId))
+          ) ||
+          isAdmin()
+        );
+      allow update: if isSignedIn() &&
+        isValidId(negotiationId) &&
+        isValidNegotiationOffer(incoming()) &&
+        incoming().productId == existing().productId &&
+        incoming().traderId == existing().traderId &&
+        incoming().customerId == existing().customerId &&
+        incoming().listedPrice == existing().listedPrice &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            !(existing().status in ['Accepted', 'Declined']) &&
+            (
+              // Action: Trader responds to offer
+              (
+                isOwner(existing().traderId) &&
+                incoming().diff(existing()).affectedKeys().hasOnly(['status', 'counterPrice', 'updatedAt']) &&
+                incoming().status in ['Accepted', 'Countered', 'Declined']
+              ) ||
+              // Action: Customer responds to counter-offer
+              (
+                isOwner(existing().customerId) &&
+                existing().status == 'Countered' &&
+                incoming().diff(existing()).affectedKeys().hasOnly(['status', 'offerPrice', 'message', 'updatedAt']) &&
+                incoming().status in ['Pending', 'Accepted', 'Declined']
+              )
+            )
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(negotiationId) && (isOwner(existing().customerId) || isAdmin());
+    }
+
+    // =========================================================================
+    // 7. GROUP BUYS & PARTICIPANTS (Atomic Sync via existsAfter/getAfter)
+    // =========================================================================
+    match /groupBuys/{groupBuyId} {
+      allow get: if isSignedIn() && isValidId(groupBuyId);
+      allow list: if isRootAdmin() || (
+        isSignedIn() &&
+        resource.data.status in ['Open', 'Unlocked', 'Completed']
+      );
+      allow create: if isSignedIn() &&
+        isValidId(groupBuyId) &&
+        isValidGroupBuy(incoming()) &&
+        incoming().createdAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            incoming().creatorId == request.auth.uid &&
+            incoming().status == 'Open' &&
+            incoming().currentBuyers == 1 &&
+            !('updatedAt' in incoming()) &&
+            exists(/databases/$(database)/documents/products/$(incoming().productId))
+          ) ||
+          isAdmin()
+        );
+      allow update: if isSignedIn() &&
+        isValidId(groupBuyId) &&
+        isValidGroupBuy(incoming()) &&
+        incoming().productId == existing().productId &&
+        incoming().traderId == existing().traderId &&
+        incoming().creatorId == existing().creatorId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            existing().status != 'Completed' &&
+            (
+              // Action: Customer joins group buy atomically with participant doc (prevents double-join)
+              (
+                incoming().diff(existing()).affectedKeys().hasOnly(['currentBuyers', 'status', 'updatedAt']) &&
+                incoming().currentBuyers == existing().currentBuyers + 1 &&
+                incoming().status in ['Open', 'Unlocked'] &&
+                !exists(/databases/$(database)/documents/groupBuys/$(groupBuyId)/participants/$(request.auth.uid)) &&
+                existsAfter(/databases/$(database)/documents/groupBuys/$(groupBuyId)/participants/$(request.auth.uid))
+              ) ||
+              // Action: Creator or Trader advances campaign status
+              (
+                (isOwner(existing().creatorId) || isOwner(existing().traderId)) &&
+                incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+                incoming().status in ['Unlocked', 'Completed']
+              )
+            )
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(groupBuyId) && isAdmin();
+
+      match /participants/{participantId} {
+        allow get: if isSignedIn() && isValidId(groupBuyId) && isValidId(participantId) && (
+          isOwner(existing().userId) ||
+          get(/databases/$(database)/documents/groupBuys/$(groupBuyId)).data.creatorId == request.auth.uid ||
+          get(/databases/$(database)/documents/groupBuys/$(groupBuyId)).data.traderId == request.auth.uid ||
+          isAdmin()
+        );
+        allow list: if isRootAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+        allow create: if isSignedIn() &&
+          isValidId(groupBuyId) &&
+          isValidId(participantId) &&
+          isValidGroupBuyParticipant(incoming()) &&
+          incoming().joinedAt == request.time &&
+          (
+            (
+              isVerifiedUser() &&
+              incoming().userId == request.auth.uid &&
+              participantId == request.auth.uid &&
+              exists(/databases/$(database)/documents/groupBuys/$(groupBuyId)) &&
+              getAfter(/databases/$(database)/documents/groupBuys/$(groupBuyId)).data.currentBuyers >= 1
+            ) ||
+            isAdmin()
+          );
+        allow update: if isSignedIn() &&
+          isValidId(groupBuyId) &&
+          isValidId(participantId) &&
+          isValidGroupBuyParticipant(incoming()) &&
+          incoming().userId == existing().userId &&
+          incoming().joinedAt == existing().joinedAt &&
+          isAdmin();
+        allow delete: if isSignedIn() && isValidId(groupBuyId) && isValidId(participantId) && (isOwner(existing().userId) || isAdmin());
+      }
+    }
+
+    // =========================================================================
+    // 8. DIRECT CHATS
+    // =========================================================================
+    match /chats/{chatId} {
+      allow get: if isSignedIn() && isValidId(chatId) && (
+        isOwner(existing().senderId) ||
+        isOwner(existing().receiverId) ||
+        isAdmin()
+      );
+      allow list: if isRootAdmin() || (
+        isSignedIn() &&
+        (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid)
+      );
+      allow create: if isSignedIn() &&
+        isValidId(chatId) &&
+        isValidChatMessage(incoming()) &&
+        incoming().createdAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            incoming().senderId == request.auth.uid &&
+            exists(/databases/$(database)/documents/users/$(incoming().receiverId))
+          ) ||
+          isAdmin()
+        );
+      allow update: if isSignedIn() &&
+        isValidId(chatId) &&
+        isValidChatMessage(incoming()) &&
+        incoming().senderId == existing().senderId &&
+        incoming().receiverId == existing().receiverId &&
+        incoming().createdAt == existing().createdAt &&
+        isAdmin();
+      allow delete: if isSignedIn() && isValidId(chatId) && (isOwner(existing().senderId) || isAdmin());
+    }
+
+    // =========================================================================
+    // 9. UPLOADED FILES METADATA
+    // =========================================================================
+    match /files/{fileId} {
+      allow get: if isSignedIn() && isValidId(fileId) && (isOwner(existing().userId) || isAdmin());
+      allow list: if isRootAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() &&
+        isValidId(fileId) &&
+        isValidStorageFile(incoming()) &&
+        incoming().createdAt == request.time &&
+        ((isVerifiedUser() && incoming().userId == request.auth.uid) || isAdmin());
+      allow update: if isSignedIn() &&
+        isValidId(fileId) &&
+        isValidStorageFile(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        isAdmin();
+      allow delete: if isSignedIn() && isValidId(fileId) && (isOwner(existing().userId) || isAdmin());
+    }
+
+    // =========================================================================
+    // 10. REWARDS (System/Admin-Managed Loyalty Points)
+    // =========================================================================
+    match /rewards/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isRootAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() &&
+        isValidId(userId) &&
+        isValidUserRewards(incoming()) &&
+        incoming().userId == userId &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isSignedIn() &&
+        isValidId(userId) &&
+        isValidUserRewards(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow delete: if isSignedIn() && isValidId(userId) && isAdmin();
+    }
+
+    // =========================================================================
+    // 11. LIVE STREAMS & LIVE Q&A MESSAGES
+    // =========================================================================
+    match /liveStreams/{streamId} {
+      allow get: if isSignedIn() && isValidId(streamId);
+      allow list: if isRootAdmin() || (
+        isSignedIn() &&
+        resource.data.status in ['Live', 'Upcoming', 'Ended']
+      );
+      allow create: if isSignedIn() &&
+        isValidId(streamId) &&
+        isValidLiveStream(incoming()) &&
+        incoming().createdAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            incoming().traderId == request.auth.uid &&
+            incoming().status in ['Live', 'Upcoming'] &&
+            !('updatedAt' in incoming()) &&
+            exists(/databases/$(database)/documents/users/$(incoming().traderId))
+          ) ||
+          isAdmin()
+        );
+      allow update: if isSignedIn() &&
+        isValidId(streamId) &&
+        isValidLiveStream(incoming()) &&
+        incoming().traderId == existing().traderId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            isVerifiedUser() &&
+            existing().status != 'Ended' &&
+            isOwner(existing().traderId) &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'title', 'description', 'status', 'liveDiscountPct', 'updatedAt'
+            ])
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isSignedIn() && isValidId(streamId) && (isOwner(existing().traderId) || isAdmin());
+
+      match /messages/{messageId} {
+        allow get: if isSignedIn() && isValidId(streamId) && isValidId(messageId);
+        allow list: if isRootAdmin() || (isSignedIn() && resource.data.senderId is string);
+        allow create: if isSignedIn() &&
+          isValidId(streamId) &&
+          isValidId(messageId) &&
+          isValidLiveStreamMessage(incoming()) &&
+          incoming().createdAt == request.time &&
+          (
+            (
+              isVerifiedUser() &&
+              incoming().senderId == request.auth.uid &&
+              exists(/databases/$(database)/documents/liveStreams/$(streamId))
+            ) ||
+            isAdmin()
+          );
+        allow update: if isSignedIn() &&
+          isValidId(streamId) &&
+          isValidId(messageId) &&
+          isValidLiveStreamMessage(incoming()) &&
+          incoming().senderId == existing().senderId &&
+          incoming().createdAt == existing().createdAt &&
+          isAdmin();
+        allow delete: if isSignedIn() && isValidId(streamId) && isValidId(messageId) && (isOwner(existing().senderId) || isAdmin());
+      }
+    }
+
+    // =========================================================================
+    // 12. FRAUD ALERTS (Strict Admin-Only)
+    // =========================================================================
+    match /fraudAlerts/{alertId} {
+      allow get: if isSignedIn() && isValidId(alertId) && isAdmin();
+      allow list: if isRootAdmin();
+      allow create: if isSignedIn() &&
+        isValidId(alertId) &&
+        isValidFraudAlert(incoming()) &&
+        incoming().createdAt == request.time &&
+        !('updatedAt' in incoming()) &&
+        isAdmin();
+      allow update: if isSignedIn() &&
+        isValidId(alertId) &&
+        isValidFraudAlert(incoming()) &&
+        incoming().targetType == existing().targetType &&
+        incoming().targetId == existing().targetId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['riskLevel', 'reason', 'resolved', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isSignedIn() && isValidId(alertId) && isAdmin();
+    }
+
+    // =========================================================================
+    // 13. ADMIN COLLECTION GROUP READ ACCESS (Root Admin Cross-Collection Queries)
+    // =========================================================================
+    match /{path=**}/private/{docId} {
+      allow get: if isSignedIn() && isValidId(docId) && isAdmin();
+      allow list: if isRootAdmin();
+    }
+
+    match /{path=**}/reviews/{reviewId} {
+      allow get: if isSignedIn() && isValidId(reviewId) && isAdmin();
+      allow list: if isRootAdmin();
+    }
+
+    match /{path=**}/items/{itemId} {
+      allow get: if isSignedIn() && isValidId(itemId) && isAdmin();
+      allow list: if isRootAdmin();
+    }
+
+    match /{path=**}/participants/{participantId} {
+      allow get: if isSignedIn() && isValidId(participantId) && isAdmin();
+      allow list: if isRootAdmin();
+    }
+
+    match /{path=**}/messages/{messageId} {
+      allow get: if isSignedIn() && isValidId(messageId) && isAdmin();
+      allow list: if isRootAdmin();
+    }
+  }
+}

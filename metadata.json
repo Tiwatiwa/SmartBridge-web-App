@@ -1,0 +1,6 @@
+{
+  "name": "SmartBridge",
+  "description": "SmartBridge Market is an intelligent digital marketplace connecting buyers, local traders, farmers, and delivery riders in Zambia with AI personal shopping, local-language voice search, smart bargaining, community group buying, rentals, farm-direct produce, and offline shopping sync.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
